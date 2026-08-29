@@ -1,3 +1,6 @@
 pypdf
 chromadb
 ollama
+rank-bm25
+sentence-transformers
+pytest
