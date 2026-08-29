@@ -6,7 +6,7 @@ SKIP = re.compile(
     r"^(OMH Official Policy Manual|Official Policy Manual|Date issued|Date Issued|"
     r"T\.L\.|Section #|Section:|Directive:|Policy Owner:|Introduction|Preface|"
     r"Operational Management|Patient Care|"
-    r"Page|_+|"                                   # <- new: "Page" and "____" lines
+    r"Page( \d+ of \d+)?|_+|"                                   # <- new: "Page" and "____" lines
     r"\d{1,2}/\d{1,2}/\d{2,4}|\d+ of \d+|(I|OM|PC)-\d+|\d{2}-\d{2})$",
     re.IGNORECASE,
 )
