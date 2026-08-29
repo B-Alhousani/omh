@@ -123,15 +123,27 @@ the printer skips the Sources block when there are no hits.
 
 ## Citations
 
-The model sometimes attached a neighbor chunk's page number to a fact. So I
-split the responsibility:
+The model does not write citations at all. The code prints "Sources used to
+answer" under the reply, with document titles and page numbers taken from
+chunk metadata. That part cannot be hallucinated; it comes from pypdf page
+numbers carried through the whole pipeline.
 
-- The model cites only the document name: [Acceptable Use of Internet
-  Policy (OM-500)]. With 4 documents, this is hard to get wrong.
-- The code prints "Sources used to answer" under the reply, with document
-  titles and page numbers taken from chunk metadata. This part cannot be
-  hallucinated; it comes from pypdf page numbers carried through the whole
-  pipeline.
+I arrived at this by testing. My first version asked the model to name the
+source document in brackets after each fact, on the theory that with only 4
+documents it would be hard to get wrong. Running 16 questions across the
+four policies showed otherwise: roughly a third of the brackets named the
+wrong document. "Are e-mail messages considered state records?" was answered
+correctly from OM-505 and cited OM-500. "Who does the policy manual apply
+to?" was answered from I-100 and cited OM-500. The model also invented
+section labels that appear nowhere in the context, such as [iPad Sanitation
+Guidelines] and [OM-500, D. Body of Directive, 1) Acceptable Use].
+
+The Sources block was right in all 16. So the model's citations were adding
+a second, less reliable answer to a question the metadata already answered.
+Removing them also made several answers better: asked whether a personal
+e-mail account may be used for OMH business, the citing version replied with
+a statement about Internet access being a privilege, and the version without
+citations correctly said to use the OMH e-mail service.
 
 ## Code structure
 
@@ -174,8 +186,12 @@ That only comes from running `build_index.py` for real.
 
 ## Known limits
 
-- llama3.2 sometimes drifts from the citation format (invents "paragraph
-  5"). The Sources block stays correct.
+- llama3.2 occasionally names a document inside the answer even though the
+  prompt tells it not to. It is rare and no longer wrong when it happens,
+  but the instruction is not obeyed every time.
+- Answers vary between runs at the same settings. The Gmail question was
+  answered correctly in 4 of 5 runs; the fifth drifted onto an unrelated
+  passage about AI risk. Nothing in the pipeline pins the sampling.
 - Broken words from pypdf remain in the text.
 - Retrieval brings some irrelevant chunks next to the right ones; the
   prompt tells the model to use only what answers the question.
