@@ -22,8 +22,7 @@ Answer ONLY using the context below. If the answer is not in the context, say
 Rules:
 - Answer in 1-3 sentences. No preamble, no quotes from the context.
 - Start directly with the answer.
-- After each fact, cite the source document in brackets exactly as named in the
-  context, for example [Acceptable Use of Internet Policy (OM-500)].
+- Do not cite sources or name documents. They are listed separately.
 
 Context:
 {context}
