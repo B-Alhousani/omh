@@ -1,13 +1,13 @@
 from pathlib import Path
 from pypdf import PdfReader
 
-DATA_DIR = Path("data")
+from config import DATA_DIR
 
 
 def load_pdfs():
-    
+
     pages = []
-    for pdf_path in sorted(DATA_DIR.glob("*.pdf")):
+    for pdf_path in sorted(Path(DATA_DIR).glob("*.pdf")):
         reader = PdfReader(pdf_path)
         for page_num, page in enumerate(reader.pages, start=1):
             text = page.extract_text() or ""
