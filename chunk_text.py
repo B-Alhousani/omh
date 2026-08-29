@@ -1,9 +1,8 @@
-CHUNK_SIZE = 800
-OVERLAP = 150
+from config import CHUNK_SIZE, OVERLAP
 
 
 def chunk_page(page):
-    """Split one cleaned page dict into chunk dicts."""
+
     text = page["text"]
     chunks = []
     start = 0
