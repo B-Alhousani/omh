@@ -1,37 +1,47 @@
 import chromadb
 import ollama
 
+from config import BATCH_SIZE, COLLECTION, DB_DIR, EMBED_MODEL
 from load_pdfs import load_pdfs
 from clean_text import clean_page
 from chunk_text import chunk_page
 
-DB_DIR = "chroma_db"
-COLLECTION = "omh_policies"
+
+def build_chunks():
+    chunks = []
+    for page in load_pdfs():
+        page["text"] = clean_page(page["text"])
+        chunks.extend(chunk_page(page))
+    return chunks
 
 
-def build():
+def fresh_collection():
     client = chromadb.PersistentClient(path=DB_DIR)
-    # delete old collection so re-runs start fresh
     try:
         client.delete_collection(COLLECTION)
     except Exception:
         pass
-    col = client.create_collection(COLLECTION)
+    return client.create_collection(COLLECTION, metadata={"hnsw:space": "cosine"})
 
-    chunks = []
-    for p in load_pdfs():
-        p["text"] = clean_page(p["text"])
-        chunks.extend(chunk_page(p))
 
-    for i, ch in enumerate(chunks):
-        emb = ollama.embeddings(model="nomic-embed-text", prompt=ch["text"])
-        col.add(
-            ids=[str(i)],
-            embeddings=[emb["embedding"]],
-            documents=[ch["text"]],
-            metadatas=[{"source": ch["source"], "page": ch["page"]}],
+def index_chunks(collection, chunks):
+    for start in range(0, len(chunks), BATCH_SIZE):
+        batch = chunks[start:start + BATCH_SIZE]
+        response = ollama.embed(model=EMBED_MODEL, input=[c["text"] for c in batch])
+        collection.add(
+            ids=[str(start + offset) for offset in range(len(batch))],
+            embeddings=response["embeddings"],
+            documents=[c["text"] for c in batch],
+            metadatas=[{"source": c["source"], "page": c["page"]} for c in batch],
         )
-        print(f"\r{i + 1}/{len(chunks)}", end="")
+        yield start + len(batch)
+
+
+def build():
+    chunks = build_chunks()
+    collection = fresh_collection()
+    for done in index_chunks(collection, chunks):
+        print(f"\r{done}/{len(chunks)}", end="")
     print("\nDone.")
 
 
